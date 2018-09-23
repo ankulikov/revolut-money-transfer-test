@@ -5,9 +5,6 @@ public interface AccountLockManager {
 
     void removeLock(String accountId);
 
-    void acquireLock(String accountId);
-
-    void releaseLock(String accountId);
 
     void doInLock(String accountId, Runnable action);
 
