@@ -9,6 +9,7 @@ import com.revolut.task.model.sql.tables.records.AccountRecord;
 
 import javax.annotation.Generated;
 
+import org.jooq.Identity;
 import org.jooq.UniqueKey;
 import org.jooq.impl.Internal;
 
@@ -31,12 +32,13 @@ public class Keys {
     // IDENTITY definitions
     // -------------------------------------------------------------------------
 
+    public static final Identity<AccountRecord, Long> IDENTITY_ACCOUNT = Identities0.IDENTITY_ACCOUNT;
 
     // -------------------------------------------------------------------------
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<AccountRecord> ACCOUNT_PK = UniqueKeys0.ACCOUNT_PK;
+    public static final UniqueKey<AccountRecord> CONSTRAINT_E = UniqueKeys0.CONSTRAINT_E;
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -47,7 +49,11 @@ public class Keys {
     // [#1459] distribute members to avoid static initialisers > 64kb
     // -------------------------------------------------------------------------
 
+    private static class Identities0 {
+        public static Identity<AccountRecord, Long> IDENTITY_ACCOUNT = Internal.createIdentity(Account.ACCOUNT, Account.ACCOUNT.ID);
+    }
+
     private static class UniqueKeys0 {
-        public static final UniqueKey<AccountRecord> ACCOUNT_PK = Internal.createUniqueKey(Account.ACCOUNT, "ACCOUNT_PK", Account.ACCOUNT.ID);
+        public static final UniqueKey<AccountRecord> CONSTRAINT_E = Internal.createUniqueKey(Account.ACCOUNT, "CONSTRAINT_E", Account.ACCOUNT.ID);
     }
 }

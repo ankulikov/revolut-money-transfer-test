@@ -17,6 +17,7 @@ import javax.annotation.Generated;
 
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
@@ -41,7 +42,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Account extends TableImpl<AccountRecord> {
 
-    private static final long serialVersionUID = -976230376;
+    private static final long serialVersionUID = -1966044199;
 
     /**
      * The reference instance of <code>PUBLIC.ACCOUNT</code>
@@ -59,22 +60,22 @@ public class Account extends TableImpl<AccountRecord> {
     /**
      * The column <code>PUBLIC.ACCOUNT.ID</code>.
      */
-    public final TableField<AccountRecord, Integer> ID = createField("ID", org.jooq.impl.SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<AccountRecord, Long> ID = createField("ID", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
      * The column <code>PUBLIC.ACCOUNT.LOCKED</code>.
      */
-    public final TableField<AccountRecord, Boolean> LOCKED = createField("LOCKED", org.jooq.impl.SQLDataType.BOOLEAN, this, "");
+    public final TableField<AccountRecord, Boolean> LOCKED = createField("LOCKED", org.jooq.impl.SQLDataType.BOOLEAN.defaultValue(org.jooq.impl.DSL.field("FALSE", org.jooq.impl.SQLDataType.BOOLEAN)), this, "");
 
     /**
      * The column <code>PUBLIC.ACCOUNT.MONEY_VALUE</code>.
      */
-    public final TableField<AccountRecord, BigDecimal> MONEY_VALUE = createField("MONEY_VALUE", org.jooq.impl.SQLDataType.DECIMAL(19, 4), this, "");
+    public final TableField<AccountRecord, BigDecimal> MONEY_VALUE = createField("MONEY_VALUE", org.jooq.impl.SQLDataType.DECIMAL(19, 4).defaultValue(org.jooq.impl.DSL.field("0", org.jooq.impl.SQLDataType.DECIMAL)), this, "");
 
     /**
      * The column <code>PUBLIC.ACCOUNT.MONEY_CURRENCY</code>.
      */
-    public final TableField<AccountRecord, String> MONEY_CURRENCY = createField("MONEY_CURRENCY", org.jooq.impl.SQLDataType.VARCHAR(10), this, "");
+    public final TableField<AccountRecord, String> MONEY_CURRENCY = createField("MONEY_CURRENCY", org.jooq.impl.SQLDataType.VARCHAR(10).defaultValue(org.jooq.impl.DSL.field("'USD'", org.jooq.impl.SQLDataType.VARCHAR)), this, "");
 
     /**
      * Create a <code>PUBLIC.ACCOUNT</code> table reference
@@ -129,8 +130,16 @@ public class Account extends TableImpl<AccountRecord> {
      * {@inheritDoc}
      */
     @Override
+    public Identity<AccountRecord, Long> getIdentity() {
+        return Keys.IDENTITY_ACCOUNT;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public UniqueKey<AccountRecord> getPrimaryKey() {
-        return Keys.ACCOUNT_PK;
+        return Keys.CONSTRAINT_E;
     }
 
     /**
@@ -138,7 +147,7 @@ public class Account extends TableImpl<AccountRecord> {
      */
     @Override
     public List<UniqueKey<AccountRecord>> getKeys() {
-        return Arrays.<UniqueKey<AccountRecord>>asList(Keys.ACCOUNT_PK);
+        return Arrays.<UniqueKey<AccountRecord>>asList(Keys.CONSTRAINT_E);
     }
 
     /**

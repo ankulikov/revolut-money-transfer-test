@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class Account {
-    private String id;
+    private Long id;
     private boolean locked;
     private Money balance;
 }
