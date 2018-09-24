@@ -1,34 +1,35 @@
-package com.revolut.task;
+package com.revolut.task.util;
 
-import org.flywaydb.core.Flyway;
-import org.h2.Driver;
 import org.jooq.codegen.GenerationTool;
 import org.jooq.meta.h2.H2Database;
 import org.jooq.meta.jaxb.*;
 
-public class FillDbAndGenerateClassesRunner {
+import java.util.Properties;
+
+public class JooqClassGenerator {
     public static void main(String[] args) throws Exception {
-        Jdbc jdbc = new Jdbc()
-                .withDriver(Driver.class.getName())
-                .withUrl("jdbc:h2:./revolut_db");
-        //1. fill up database with recent DDL & DML scripts
-        Flyway flyway = new Flyway();
-        flyway.setDataSource(jdbc.getUrl(), jdbc.getUser(), jdbc.getPassword());
-        flyway.migrate();
-        //2. generate classes by DB structure
+
         Configuration configuration = new Configuration();
         configuration
-                .withJdbc(jdbc)
+                .withJdbc(readJDBCProperties())
                 .withGenerator(new Generator()
                         .withDatabase(new Database()
                                 .withName(H2Database.class.getName())
                                 .withInputSchema("PUBLIC")
-                               .withExcludes("INFORMATION_SCHEMA.*|FLYWAY.*"))
+                                .withExcludes("INFORMATION_SCHEMA.*|FLYWAY.*"))
                         .withTarget(new Target()
                                 .withPackageName("com.revolut.task.model.sql")
                                 .withDirectory("./src/main/java")));
         (new GenerationTool()).run(configuration);
-
-
     }
+
+    private static Jdbc readJDBCProperties() {
+        Properties properties = Utils.loadJdbcProperties();
+        return new Jdbc()
+                    .withDriver(properties.getProperty("jdbc.driver"))
+                    .withUrl(properties.getProperty("jdbc.url"))
+                    .withUsername(properties.getProperty("jdbc.username"))
+                    .withPassword(properties.getProperty("jdbc.password"));
+    }
+
 }
