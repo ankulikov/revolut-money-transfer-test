@@ -5,6 +5,8 @@ import com.revolut.task.model.Money;
 import com.revolut.task.model.sql.tables.records.AccountRecord;
 import com.revolut.task.service.api.AccountService;
 import com.revolut.task.service.api.DatabaseManager;
+import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -29,29 +31,31 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccount(String id) {
+    public Account getAccount(long id) {
         Optional<AccountRecord> possibleRecord = databaseManager.getSqlDSL()
                 .selectFrom(ACCOUNT)
-                .where(ACCOUNT.ID.eq(Long.valueOf(id)))
+                .where(ACCOUNT.ID.eq(id))
                 .fetchOptional();
         return possibleRecord.map(this::convertFrom).orElse(null);
     }
 
     @Override
-    public void removeAccount(String id) {
-        databaseManager.getSqlDSL()
+    public boolean removeAccount(long id) {
+        return databaseManager.getSqlDSL()
                 .deleteFrom(ACCOUNT)
-                .where(ACCOUNT.ID.eq(Long.valueOf(id)))
-                .execute();
+                .where(ACCOUNT.ID.eq(id))
+                .execute() > 0;
     }
 
     @Override
-    public void lockAccount(String id) {
-        databaseManager.getSqlDSL()
-                .update(ACCOUNT)
-                .set(ACCOUNT.LOCKED, true)
-                .where(ACCOUNT.ID.eq(Long.valueOf(id)))
-                .execute();
+    public boolean lockAccount(long id) {
+        DSLContext sql = databaseManager.getSqlDSL();
+        return sql.transactionResult(configuration ->
+                DSL.using(configuration)
+                        .update(ACCOUNT)
+                        .set(ACCOUNT.LOCKED, true)
+                        .where(ACCOUNT.ID.eq(id))
+                        .execute() > 0);
     }
 
     private Account convertFrom(AccountRecord accountRecord) {
