@@ -3,9 +3,11 @@ package com.revolut.task.service.api;
 import com.revolut.task.model.Money;
 
 public interface MoneyService {
-    void transfer(String fromId, String toId, Money moneyToTransfer);
+    Money getBalance(Long id);
 
-    void withdraw(String id, Money moneyToWithdraw);
+    void transfer(Long fromId, Long toId, Money moneyToTransfer);
 
-    void deposit(String id, Money moneyToDeposit);
+    void withdraw(Long id, Money moneyToWithdraw);
+
+    void deposit(Long id, Money moneyToDeposit);
 }

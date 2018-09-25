@@ -13,29 +13,32 @@ class AccountLockManagerImplTest extends Specification {
     def taskExecutor = Executors.newFixedThreadPool(4)
 
     def "implicit lock creation"() {
+        setup:
+        def ACC_ID = 1L
         when:
-        lockManager.doInLock("acc1") { println "lock acc1 must be created" }
+        lockManager.doInLock(ACC_ID) { println "lock for '1' must be created" }
         then:
         noExceptionThrown()
-        lockManager.locks.containsKey("acc1")
+        lockManager.locks.containsKey(ACC_ID)
     }
 
     def "remove and create lock"() {
         setup:
-        lockManager.createLock("MY_LOCK")
+        def ACC_ID = 100L
+        lockManager.createLock(ACC_ID)
         when:
-        lockManager.removeLock("MY_LOCK")
+        lockManager.removeLock(ACC_ID)
         then:
-        !lockManager.locks.containsKey("MY_LOCK")
+        !lockManager.locks.containsKey(ACC_ID)
         when:
-        lockManager.createLock("MY_LOCK")
+        lockManager.createLock(ACC_ID)
         then:
-        lockManager.locks.containsKey("MY_LOCK")
+        lockManager.locks.containsKey(ACC_ID)
     }
 
     def "remove nonexistent lock"() {
         when:
-        lockManager.removeLock("SOME_LOCK_WHICH_DOESNT_EXIST")
+        lockManager.removeLock(100500)
         then:
         noExceptionThrown()
     }
@@ -44,14 +47,15 @@ class AccountLockManagerImplTest extends Specification {
     @Timeout(30)
     def "exception doesn't block account"() {
         setup:
-        lockManager.createLock("A")
+        def ACC_ID = 5L
+        lockManager.createLock(ACC_ID)
         when:
-        taskExecutor.submit { lockManager.doInLock("A") { throw new RuntimeException("Some exception") } }.get()
+        taskExecutor.submit { lockManager.doInLock(ACC_ID) { throw new RuntimeException("Some exception") } }.get()
         then:
         def ex = thrown(ExecutionException.class)
         ex.getCause().class == RuntimeException.class
         when:
-        taskExecutor.submit { lockManager.doInLock("A") { println "just success action" } }.get()
+        taskExecutor.submit { lockManager.doInLock(ACC_ID) { println "just success action" } }.get()
         then:
         noExceptionThrown()
     }
@@ -60,13 +64,15 @@ class AccountLockManagerImplTest extends Specification {
     @Timeout(30)
     def "doInLock with permuted IDs doesn't cause deadlock"() {
         setup:
-        lockManager.createLock("A")
-        lockManager.createLock("B")
+        def A = 1L
+        def B = 2L
+        lockManager.createLock(A)
+        lockManager.createLock(B)
         def AtoBCounter = 0, BtoACounter = 0, tasks = []
         when:
         1000.times {
-            tasks << { lockManager.doInLock("A", "B") { AtoBCounter++ } }
-            tasks << { lockManager.doInLock("B", "A") { BtoACounter++ } }
+            tasks << { lockManager.doInLock(A, B) { AtoBCounter++ } }
+            tasks << { lockManager.doInLock(B, A) { BtoACounter++ } }
         }
         taskExecutor.invokeAll(tasks).forEach({ it.get() })
         then:
@@ -78,14 +84,16 @@ class AccountLockManagerImplTest extends Specification {
     @Timeout(30)
     def "doInLock for one and two accounts doesn't block each other"() {
         setup:
-        lockManager.createLock("A")
-        lockManager.createLock("B")
+        def A = 1L
+        def B = 2L
+        lockManager.createLock(A)
+        lockManager.createLock(B)
         def ACounter = 0, BCounter = 0, AtoBCounter = 0, tasks = []
         when:
         1000.times {
-            tasks << { lockManager.doInLock("A") { ACounter++ } }
-            tasks << { lockManager.doInLock("A", "B") { AtoBCounter++ } }
-            tasks << { lockManager.doInLock("B") { BCounter++ } }
+            tasks << { lockManager.doInLock(A) { ACounter++ } }
+            tasks << { lockManager.doInLock(A, B) { AtoBCounter++ } }
+            tasks << { lockManager.doInLock(B) { BCounter++ } }
         }
         taskExecutor.invokeAll(tasks).forEach({ it.get() })
         then:
@@ -98,20 +106,22 @@ class AccountLockManagerImplTest extends Specification {
     @Timeout(30)
     def "doInLock for one and two accounts doesn't block each other when exceptions"() {
         setup:
-        lockManager.createLock("A")
-        lockManager.createLock("B")
+        def A = 1L
+        def B = 2L
+        lockManager.createLock(A)
+        lockManager.createLock(B)
         def ACounter = 0, BCounter = 0, AtoBCounter = 0, tasks = []
         when:
         1000.times { i ->
             tasks << {
-                lockManager.doInLock("A") {
+                lockManager.doInLock(A) {
                     if (i % 2 == 0) ACounter++
                     else throw new RuntimeException("lock in A, exception")
                 }
             }
-            tasks << { lockManager.doInLock("A", "B") { AtoBCounter++ } }
+            tasks << { lockManager.doInLock(A, B) { AtoBCounter++ } }
             tasks << {
-                lockManager.doInLock("B") {
+                lockManager.doInLock(B) {
                     if (i % 2 == 1) BCounter++
                     else throw new RuntimeException("lock in B, exception")
                 }
@@ -132,14 +142,17 @@ class AccountLockManagerImplTest extends Specification {
     @Timeout(30)
     def "check concurrency for doInLock with two accounts"() {
         setup:
-        lockManager.createLock("A")
-        lockManager.createLock("B")
-        lockManager.createLock("C")
+        def A = 1L
+        def B = 2L
+        def C = 3L
+        lockManager.createLock(A)
+        lockManager.createLock(B)
+        lockManager.createLock(C)
         def counter = 10, tasks = []
         when:
         1000.times {
-            tasks << { lockManager.doInLock("A", "B") { counter++ } }
-            tasks << { lockManager.doInLock("C", "B") { counter-- } }
+            tasks << { lockManager.doInLock(A, B) { counter++ } }
+            tasks << { lockManager.doInLock(B, C) { counter-- } }
         }
         taskExecutor.invokeAll(tasks).forEach({ it.get() })
         then:

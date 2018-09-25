@@ -7,21 +7,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class AccountLockManagerImpl implements AccountLockManager {
-    Map<String, ReentrantLock> locks = new ConcurrentHashMap<>();
+    Map<Long, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     @Override
-    public void createLock(String accountId) {
+    public void createLock(Long accountId) {
         locks.putIfAbsent(accountId, new ReentrantLock());
     }
 
     @Override
-    public void removeLock(String accountId) {
+    public void removeLock(Long accountId) {
         locks.remove(accountId);
     }
 
 
     @Override
-    public void doInLock(String accountId, Runnable action) {
+    public void doInLock(Long accountId, Runnable action) {
         createLock(accountId);
         ReentrantLock lock = locks.get(accountId);
         lock.lock();
@@ -33,7 +33,7 @@ public class AccountLockManagerImpl implements AccountLockManager {
     }
 
     @Override
-    public void doInLock(String accountId1, String accountId2, Runnable action) {
+    public void doInLock(Long accountId1, Long accountId2, Runnable action) {
         createLock(accountId1);
         createLock(accountId2);
         ReentrantLock lock1 = locks.get(accountId1);

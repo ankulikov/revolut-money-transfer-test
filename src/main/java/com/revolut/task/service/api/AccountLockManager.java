@@ -1,12 +1,12 @@
 package com.revolut.task.service.api;
 
 public interface AccountLockManager {
-    void createLock(String accountId);
+    void createLock(Long accountId);
 
-    void removeLock(String accountId);
+    void removeLock(Long accountId);
 
 
-    void doInLock(String accountId, Runnable action);
+    void doInLock(Long accountId, Runnable action);
 
-    void doInLock(String accountId1, String accountId2, Runnable action);
+    void doInLock(Long accountId1, Long accountId2, Runnable action);
 }
