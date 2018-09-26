@@ -2,10 +2,7 @@ package com.revolut.task.service.impl;
 
 import com.revolut.task.model.Money;
 import com.revolut.task.model.sql.tables.Account;
-import com.revolut.task.service.api.AccountLockManager;
-import com.revolut.task.service.api.DatabaseManager;
-import com.revolut.task.service.api.ExchangeService;
-import com.revolut.task.service.api.MoneyService;
+import com.revolut.task.service.api.*;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.impl.DSL;
 
@@ -22,6 +19,7 @@ public class MoneyServiceImpl implements MoneyService {
     private DatabaseManager databaseManager;
     private AccountLockManager lockManager;
     private ExchangeService exchangeService;
+    private AccountService accountService;
 
     @Inject
     public void setDatabaseManager(DatabaseManager databaseManager) {
@@ -36,6 +34,11 @@ public class MoneyServiceImpl implements MoneyService {
     @Inject
     public void setExchangeService(ExchangeService exchangeService) {
         this.exchangeService = exchangeService;
+    }
+
+    @Inject
+    public void setAccountService(AccountService accountService) {
+        this.accountService = accountService;
     }
 
     @Override
@@ -61,6 +64,8 @@ public class MoneyServiceImpl implements MoneyService {
         }
         lockManager.doInLock(fromId, toId, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
+                    checkForLock(fromId);
+                    checkForLock(toId);
                     withdraw(fromId, moneyToTransfer);
                     deposit(toId, moneyToTransfer);
                 })
@@ -74,6 +79,7 @@ public class MoneyServiceImpl implements MoneyService {
         }
         lockManager.doInLock(id, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
+                    checkForLock(id);
                     Money balance = getBalance(id);
                     Money withdrawInCurrency =
                             exchangeService.exchange(moneyToWithdraw, balance.getCurrency());
@@ -92,6 +98,7 @@ public class MoneyServiceImpl implements MoneyService {
                 }));
     }
 
+
     @Override
     public void deposit(Long id, Money moneyToDeposit) {
         if (moneyToDeposit.getAmount().signum() == -1) {
@@ -99,6 +106,7 @@ public class MoneyServiceImpl implements MoneyService {
         }
         lockManager.doInLock(id, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
+                    checkForLock(id);
                     Money balance = getBalance(id);
                     Money depositInCurrency =
                             exchangeService.exchange(moneyToDeposit, balance.getCurrency());
@@ -111,6 +119,12 @@ public class MoneyServiceImpl implements MoneyService {
                             .set(ACCOUNT.MONEY_CURRENCY, newBalance.getCurrency())
                             .where(ACCOUNT.ID.eq(id)).execute();
                 }));
+    }
+
+    private void checkForLock(Long accountId) {
+        if (accountService.isLocked(accountId)) {
+            throw new IllegalArgumentException("Account with ID=" + accountId + " is locked");
+        }
     }
 
 

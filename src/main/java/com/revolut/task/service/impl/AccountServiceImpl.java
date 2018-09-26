@@ -6,6 +6,7 @@ import com.revolut.task.model.sql.tables.records.AccountRecord;
 import com.revolut.task.service.api.AccountService;
 import com.revolut.task.service.api.DatabaseManager;
 import org.jooq.DSLContext;
+import org.jooq.Record1;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
@@ -37,6 +38,18 @@ public class AccountServiceImpl implements AccountService {
                 .where(ACCOUNT.ID.eq(id))
                 .fetchOptional();
         return possibleRecord.map(this::convertFrom).orElse(null);
+    }
+
+    @Override
+    public boolean isLocked(Long id) {
+        Record1<Boolean> locked = databaseManager.getSqlDSL()
+                .select(ACCOUNT.LOCKED).from(ACCOUNT)
+                .where(ACCOUNT.ID.eq(id))
+                .fetchOne();
+        if (locked == null) {
+            throw new IllegalArgumentException("Can't find account with ID="+id);
+        }
+        return locked.get(ACCOUNT.LOCKED);
     }
 
     @Override

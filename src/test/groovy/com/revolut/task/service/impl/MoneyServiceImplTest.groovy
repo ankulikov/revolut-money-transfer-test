@@ -1,7 +1,11 @@
 package com.revolut.task.service.impl
 
-
+import com.google.inject.Guice
+import com.google.inject.Injector
+import com.revolut.task.di.AppInjectorModule
 import com.revolut.task.model.Money
+import com.revolut.task.service.api.AccountService
+import com.revolut.task.service.api.MoneyService
 import com.revolut.task.util.DatabaseMigrator
 import spock.lang.Shared
 import spock.lang.Specification
@@ -10,13 +14,12 @@ import static com.revolut.task.TestUtils.bigDec
 
 class MoneyServiceImplTest extends Specification {
     @Shared
-    def moneyService = new MoneyServiceImpl()
+    MoneyService moneyService = null
 
     def setupSpec() {
         DatabaseMigrator.run()
-        moneyService.setDatabaseManager(new DatabaseManagerImpl())
-        moneyService.setLockManager(new AccountLockManagerImpl())
-        moneyService.setExchangeService(new ExchangeServiceImpl())
+        Injector injector = Guice.createInjector(new AppInjectorModule())
+        moneyService = injector.getInstance(MoneyService.class)
     }
 
     def "get balance of existing account"() {
@@ -55,12 +58,21 @@ class MoneyServiceImplTest extends Specification {
     }
 
     def "deposit negative money"() {
-        def ACC_ID = 1
+        def ACC_ID = 1L
         when:
         moneyService.deposit(ACC_ID, new Money(bigDec("-100"),"RUB"))
         then:
         def e = thrown(IllegalArgumentException.class)
         e.message == "Can't deposit negative amount of money"
+    }
+
+    def "deposit from locked account"() {
+        def ACC_ID = 3L //1300 EUR, locked
+        when:
+        moneyService.deposit(ACC_ID, new Money(bigDec("10"),"EUR"))
+        then:
+        def e = thrown(IllegalArgumentException.class)
+        e.message == "Account with ID=3 is locked"
     }
 
     def "withdraw from non-existing account"() {
@@ -73,7 +85,7 @@ class MoneyServiceImplTest extends Specification {
     }
 
     def "withdraw negative amount"() {
-        def ACC_ID = 1
+        def ACC_ID = 1L
         when:
         moneyService.withdraw(ACC_ID, new Money(bigDec("-100"),"RUB"))
         then:
@@ -82,12 +94,21 @@ class MoneyServiceImplTest extends Specification {
     }
 
     def "withdraw exceeding amount"() {
-        def ACC_ID = 1 //350 USD
+        def ACC_ID = 1L //350 USD
         when:
         moneyService.withdraw(ACC_ID, new Money(bigDec("500"),"USD"))
         then:
         def e = thrown(IllegalArgumentException.class)
         e.message == "Account ID=1 doesn't have enough money to withdraw requested amount"
+    }
+
+    def "withdraw from locked account"() {
+        def ACC_ID = 3 //1300 EUR, locked
+        when:
+        moneyService.withdraw(ACC_ID, new Money(bigDec("10"),"EUR"))
+        then:
+        def e = thrown(IllegalArgumentException.class)
+        e.message == "Account with ID=3 is locked"
     }
 
     def "back and forth valid transfer in the same currency"() {
@@ -139,5 +160,15 @@ class MoneyServiceImplTest extends Specification {
         then:
         def e = thrown(IllegalArgumentException.class)
         e.message == "Account ID=1 doesn't have enough money to withdraw requested amount"
+    }
+
+    def "transfer to locked account"() {
+        def ACC1 = 1L //350 USD
+        def ACC2= 3L //1300 EUR, locked
+        when:
+        moneyService.transfer(ACC1, ACC2, new Money(bigDec("20"),"RUB"))
+        then:
+        def e = thrown(IllegalArgumentException.class)
+        e.message == "Account with ID=3 is locked"
     }
 }
