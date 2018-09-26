@@ -29,9 +29,8 @@ public class ExchangeServiceImpl implements ExchangeService {
     @Override
     public Money exchange(Money source, String targetCurrency) {
         BigDecimal rate = exchangeRate(source.getCurrency(), targetCurrency);
-        return new Money(
-                source.getAmount().multiply(rate),
-                targetCurrency);
+        BigDecimal newAmount = Money.multiply(source.getAmount(), rate);
+        return new Money(newAmount, targetCurrency);
     }
 
     @Override
@@ -44,6 +43,6 @@ public class ExchangeServiceImpl implements ExchangeService {
         if (targetRate == null) {
             throw new IllegalArgumentException("Can't find exchange rate for " + targetCurrency);
         }
-        return sourceRate.divide(targetRate, 5, RoundingMode.HALF_UP);
+        return Money.divide(sourceRate, targetRate);
     }
 }
