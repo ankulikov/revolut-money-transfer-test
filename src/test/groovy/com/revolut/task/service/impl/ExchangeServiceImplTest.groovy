@@ -50,4 +50,17 @@ class ExchangeServiceImplTest extends Specification {
         money.amount == 5
     }
 
+    def "check all supported currencies"() {
+        when:
+        def currencies = converter.getSupportedCurrencies()
+        then:
+        currencies.containsAll(["USD", "RUB", "EUR", "GBP", "INR"])
+    }
+
+    def "check for currency support"() {
+        expect:
+        converter.isCurrencySupported("RUB")
+        !converter.isCurrencySupported("XXX")
+    }
+
 }

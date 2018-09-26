@@ -5,10 +5,7 @@ import com.revolut.task.service.api.ExchangeService;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class ExchangeServiceImpl implements ExchangeService {
     private Map<String, BigDecimal> rates = new HashMap<>();
@@ -31,6 +28,16 @@ public class ExchangeServiceImpl implements ExchangeService {
         BigDecimal rate = exchangeRate(source.getCurrency(), targetCurrency);
         BigDecimal newAmount = Money.multiply(source.getAmount(), rate);
         return new Money(newAmount, targetCurrency);
+    }
+
+    @Override
+    public List<String> getSupportedCurrencies() {
+        return new ArrayList<>(Collections.unmodifiableSet(rates.keySet()));
+    }
+
+    @Override
+    public boolean isCurrencySupported(String currency) {
+        return rates.containsKey(currency);
     }
 
     @Override
