@@ -12,6 +12,7 @@ import org.jooq.impl.DSL;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.revolut.task.model.sql.Tables.ACCOUNT;
 
@@ -39,18 +40,25 @@ public class MoneyServiceImpl implements MoneyService {
 
     @Override
     public Money getBalance(Long id) {
-        Map<String, Object> map = databaseManager.getSqlDSL()
+        Optional<Map<String, Object>> map = databaseManager.getSqlDSL()
                 .select(Account.ACCOUNT.MONEY_VALUE, Account.ACCOUNT.MONEY_CURRENCY)
                 .from(Account.ACCOUNT)
-                .where(Account.ACCOUNT.ID.eq(id)).fetchOneMap();
-        Money money = new Money();
-        money.setAmount((BigDecimal) map.get(Account.ACCOUNT.MONEY_VALUE.getName()));
-        money.setCurrency((String) map.get(Account.ACCOUNT.MONEY_CURRENCY.getName()));
-        return money;
+                .where(Account.ACCOUNT.ID.eq(id)).fetchOptionalMap();
+        if (map.isPresent()) {
+            Money money = new Money();
+            money.setAmount((BigDecimal) map.get().get(Account.ACCOUNT.MONEY_VALUE.getName()));
+            money.setCurrency((String) map.get().get(Account.ACCOUNT.MONEY_CURRENCY.getName()));
+            return money;
+        } else {
+            throw new IllegalArgumentException("Can't find account with ID=" + id);
+        }
     }
 
     @Override
     public void transfer(Long fromId, Long toId, Money moneyToTransfer) {
+        if (moneyToTransfer.getAmount().signum() == -1) {
+            throw new IllegalArgumentException("Can't transfer negative amount of money");
+        }
         lockManager.doInLock(fromId, toId, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
                     withdraw(fromId, moneyToTransfer);
@@ -61,6 +69,9 @@ public class MoneyServiceImpl implements MoneyService {
 
     @Override
     public void withdraw(Long id, Money moneyToWithdraw) {
+        if (moneyToWithdraw.getAmount().signum() == -1) {
+            throw new IllegalArgumentException("Can't withdraw negative amount of money");
+        }
         lockManager.doInLock(id, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
                     Money balance = getBalance(id);
@@ -83,6 +94,9 @@ public class MoneyServiceImpl implements MoneyService {
 
     @Override
     public void deposit(Long id, Money moneyToDeposit) {
+        if (moneyToDeposit.getAmount().signum() == -1) {
+            throw new IllegalArgumentException("Can't deposit negative amount of money");
+        }
         lockManager.doInLock(id, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
                     Money balance = getBalance(id);
