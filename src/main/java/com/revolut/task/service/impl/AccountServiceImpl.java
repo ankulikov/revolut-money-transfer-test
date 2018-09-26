@@ -5,21 +5,28 @@ import com.revolut.task.model.Money;
 import com.revolut.task.model.sql.tables.records.AccountRecord;
 import com.revolut.task.service.api.AccountService;
 import com.revolut.task.service.api.DatabaseManager;
+import com.revolut.task.service.api.ExchangeService;
 import org.jooq.DSLContext;
 import org.jooq.Record1;
 import org.jooq.impl.DSL;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 import static com.revolut.task.model.sql.Tables.ACCOUNT;
 
 public class AccountServiceImpl implements AccountService {
     private DatabaseManager databaseManager;
+    private ExchangeService exchangeService;
+
 
     @Inject
     public void setDatabaseManager(DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
+    }
+
+    @Inject
+    public void setExchangeService(ExchangeService exchangeService) {
+        this.exchangeService = exchangeService;
     }
 
     @Override
@@ -32,12 +39,27 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account getAccount(long id) {
-        Optional<AccountRecord> possibleRecord = databaseManager.getSqlDSL()
+    public Account createAccount(String currency) {
+        if (!exchangeService.isCurrencySupported(currency)) {
+            throw new IllegalArgumentException("Currency "+currency+" is not supported");
+        }
+        AccountRecord record = databaseManager.getSqlDSL()
+                .insertInto(ACCOUNT, ACCOUNT.MONEY_CURRENCY)
+                .values(currency)
+                .returning().fetchOne();
+        return convertFrom(record);
+    }
+
+    @Override
+    public Account getAccount(Long id) {
+        AccountRecord accountRecord = databaseManager.getSqlDSL()
                 .selectFrom(ACCOUNT)
                 .where(ACCOUNT.ID.eq(id))
-                .fetchOptional();
-        return possibleRecord.map(this::convertFrom).orElse(null);
+                .fetchOne();
+        if (accountRecord != null) {
+            return convertFrom(accountRecord);
+        }
+        throw new IllegalArgumentException("Can't find account with ID="+id);
     }
 
     @Override
@@ -81,4 +103,6 @@ public class AccountServiceImpl implements AccountService {
         account.setBalance(balance);
         return account;
     }
+
+
 }

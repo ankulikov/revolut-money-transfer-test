@@ -13,6 +13,7 @@ class AccountServiceImplTest extends Specification {
     def setupSpec() {
         DatabaseMigrator.run()
         accService.setDatabaseManager(new DatabaseManagerImpl())
+        accService.setExchangeService(new ExchangeServiceImpl())
     }
 
     def "create new account"() {
@@ -23,6 +24,25 @@ class AccountServiceImplTest extends Specification {
         !account.locked
         account.balance.amount == 0
         account.balance.currency == "USD"
+    }
+
+    def "create new account with supported currency"() {
+        when:
+        def account = accService.createAccount("RUB")
+        then:
+        account.id != 0
+        !account.locked
+        account.balance.amount == 0
+        account.balance.currency == "RUB"
+    }
+
+    def "create new account with unsupported currency"() {
+        when:
+        accService.createAccount("XYZ")
+        then:
+        IllegalArgumentException ex = thrown()
+        ex.message == "Currency XYZ is not supported"
+
     }
 
     def "get existing account"() {
@@ -42,15 +62,16 @@ class AccountServiceImplTest extends Specification {
     }
 
     def "create, get and delete existing account"() {
-        setup:
         def accountCreated = accService.createAccount()
         def id = accountCreated.id
         expect:
         accountCreated == accService.getAccount(id)
+        accService.removeAccount(id)
         when:
-        assert accService.removeAccount(id)
+        accService.getAccount(id)
         then:
-        accService.getAccount(id) == null
+        IllegalArgumentException ex = thrown()
+        ex.message == "Can't find account with ID="+id
 
     }
 
