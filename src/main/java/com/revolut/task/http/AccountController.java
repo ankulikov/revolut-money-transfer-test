@@ -25,11 +25,10 @@ public class AccountController {
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Account createAccount(Map body) {
-        if (body != null && body.containsKey("currency")) {
-            return accountService.createAccount((String) body.get("currency"));
+    public Account createAccount(@QueryParam("currency") String currency) {
+        if (currency != null) {
+            return accountService.createAccount(currency);
         } else
             return accountService.createAccount();
     }
@@ -54,7 +53,6 @@ public class AccountController {
         accountService.removeAccount(Long.valueOf(accountId));
         return Response.noContent().build();
     }
-
 
 
 }
