@@ -21,7 +21,7 @@ All calls to API must be started with `http://localhost:8080/api`
 </thead>
 <tbody>
 <tr>
-	<td><pre>POST /account</pre></td>
+	<td><code>POST /account</code></td>
 	<td>Creates new account in USD currency</td>
 	<td>-</td>
 	<td>
@@ -38,7 +38,7 @@ All calls to API must be started with `http://localhost:8080/api`
     </td>
 </tr>
 <tr>
-	<td><pre>POST /account?currency=XXX</pre></td>
+	<td><code>POST /account?currency=XXX</code></td>
 	<td>Creates new account in XXX currency (e.g. USD, EUR, RUB)</td>
     <td>Query:<br/><code>currency</code> - abbreviation of currency</td>
 	<td>
@@ -55,8 +55,8 @@ All calls to API must be started with `http://localhost:8080/api`
     </td>
 </tr>
 <tr>
-	<td><pre>GET /account/{id}</pre></td>
-	<td>Get account by ID</td>
+	<td><code>GET /account/{id}</code></td>
+	<td>Gets account by ID</td>
     <td>Path:<br/><code>id</code> - account ID</td>
 	<td>
       <pre>
@@ -72,24 +72,24 @@ All calls to API must be started with `http://localhost:8080/api`
     </td>
 </tr>
 <tr>
-	<td><pre>POST /account/{id}/lock</pre></td>
-	<td>Lock account by ID, so account can't be used for money operations</td>
+	<td><code>POST /account/{id}/lock</code></td>
+	<td>Locks account by ID, so account can't be used for money operations</td>
     <td>Path:<br/><code>id</code> - account ID</td>
 	<td>
       204 No Content
     </td>
 </tr>
 <tr>
-	<td><pre>POST /account/{id}/unlock</pre></td>
-	<td>Unlock account by ID, so account can be used for money operations. Method do nothing for unlocked accounts</td>
+	<td><code>POST /account/{id}/unlock</code></td>
+	<td>Unlocks account by ID, so account can be used for money operations. Method do nothing for unlocked accounts</td>
     <td>Path:<br/><code>id</code> - account ID</td>
 	<td>
       204 No Content
     </td>
 </tr>
 <tr>
-	<td><pre>POST /account/{id}/deposit</pre></td>
-	<td>Deposit specified amount of money on account</td>
+	<td><code>POST /account/{id}/deposit</code></td>
+	<td>Deposits specified amount of money on account</td>
     <td>
     	Path:<br/><code>id</code> - account ID<br/>
         Body:
@@ -105,7 +105,7 @@ All calls to API must be started with `http://localhost:8080/api`
     </td>
 </tr>
 <tr>
-	<td><pre>POST /account/{id}/withdraw</pre></td>
+	<td><code>POST /account/{id}/withdraw</code></td>
 	<td>Withdraws specified amount of money on account</td>
     <td>
     	Path:<br/><code>id</code> - account ID<br/>
@@ -122,7 +122,7 @@ All calls to API must be started with `http://localhost:8080/api`
     </td>
 </tr>
 <tr>
-	<td><pre>POST /account/{fromId}/transfer/{toId}</pre></td>
+	<td><code>POST /account/{fromId}/transfer/{toId}</code></td>
     <td>Tranfers specified amount of money from account <code>fromId</code> to <code>toId</code></td>
     <td>
     	Path:<br/>
@@ -140,7 +140,52 @@ All calls to API must be started with `http://localhost:8080/api`
       204 No Content
     </td>
 </tr>
+<tr>
+	<td><code>DELETE /account/{id}</code></td>
+	<td>Deletes account</td>
+    <td>Path:<br/><code>id</code> - account ID</td>
+	<td>
+      204 No Content
+    </td>
+</tr>
 </tbody></table>
+
+#### Errors ####
+
+<table>
+<thead>
+<tr>
+<th>Status code</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>404</td>
+  <td><code>{"error":"Can't find account with ID=123"}</td>
+</tr>
+<tr>
+  <td>400</td>
+  <td><code>{"error":"Can't withdraw negative amount of money"}</td>
+</tr>
+<tr>
+  <td>400</td>
+  <td><code>{"error":"Can't deposit negative amount of money"}</td>
+</tr>
+<tr>
+  <td>500</td>
+  <td><code>{"error":"Account with ID=123 is locked"}</td>
+</tr>
+<tr>
+  <td>500</td>
+  <td><code>{"error":"Account with ID=123 doesn't have enough money to complete withdraw operation"}</td>
+</tr>
+<tr>
+  <td>500</td>
+  <td><code>{"error":"ANY OTHER ERROR MESSAGE"}</td>
+</tr>
+</tbody>
+</table>
 
 ### 3. 3rd-party components used ###
 * [Jetty](https://www.eclipse.org/jetty/) - embedded HTTP and Servlet server
