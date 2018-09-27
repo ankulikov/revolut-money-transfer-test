@@ -6,6 +6,7 @@ import com.revolut.task.service.api.AccountService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Map;
 
 @Path("/account")
@@ -34,10 +35,20 @@ public class AccountController {
     }
 
     @POST
-    @Path("{id}")
+    @Path("{id}/lock")
     @Produces(MediaType.APPLICATION_JSON)
     public String lockAccount(@PathParam("id") String accountId) {
         accountService.lockAccount(Long.valueOf(accountId));
         return "{\"locked\": true}";
     }
+
+    @DELETE
+    @Path("{id}")
+    public Response removeAccount(@PathParam("id") String accountId) {
+        accountService.removeAccount(Long.valueOf(accountId));
+        return Response.noContent().build();
+    }
+
+
+
 }

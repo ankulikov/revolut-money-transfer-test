@@ -41,7 +41,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account createAccount(String currency) {
         if (!exchangeService.isCurrencySupported(currency)) {
-            throw new IllegalArgumentException("Currency "+currency+" is not supported");
+            throw new IllegalArgumentException("Currency " + currency + " is not supported");
         }
         AccountRecord record = databaseManager.getSqlDSL()
                 .insertInto(ACCOUNT, ACCOUNT.MONEY_CURRENCY)
@@ -59,7 +59,8 @@ public class AccountServiceImpl implements AccountService {
         if (accountRecord != null) {
             return convertFrom(accountRecord);
         }
-        throw new IllegalArgumentException("Can't find account with ID="+id);
+        throwAccountNotFound(id);
+        return null; //unreached
     }
 
     @Override
@@ -69,28 +70,34 @@ public class AccountServiceImpl implements AccountService {
                 .where(ACCOUNT.ID.eq(id))
                 .fetchOne();
         if (locked == null) {
-            throw new IllegalArgumentException("Can't find account with ID="+id);
+            throwAccountNotFound(id);
         }
         return locked.get(ACCOUNT.LOCKED);
     }
 
     @Override
-    public boolean removeAccount(long id) {
-        return databaseManager.getSqlDSL()
+    public void removeAccount(Long id) {
+        boolean accountExists = databaseManager.getSqlDSL()
                 .deleteFrom(ACCOUNT)
                 .where(ACCOUNT.ID.eq(id))
                 .execute() > 0;
+        if (!accountExists) {
+            throwAccountNotFound(id);
+        }
     }
 
     @Override
-    public boolean lockAccount(long id) {
+    public void lockAccount(Long id) {
         DSLContext sql = databaseManager.getSqlDSL();
-        return sql.transactionResult(configuration ->
+        boolean accountExists = sql.transactionResult(configuration ->
                 DSL.using(configuration)
                         .update(ACCOUNT)
                         .set(ACCOUNT.LOCKED, true)
                         .where(ACCOUNT.ID.eq(id))
                         .execute() > 0);
+        if (!accountExists) {
+            throwAccountNotFound(id);
+        }
     }
 
     private Account convertFrom(AccountRecord accountRecord) {
@@ -102,6 +109,11 @@ public class AccountServiceImpl implements AccountService {
         balance.setCurrency(accountRecord.getMoneyCurrency());
         account.setBalance(balance);
         return account;
+    }
+
+    private void throwAccountNotFound(Long accountId) throws RuntimeException {
+        throw new IllegalArgumentException("Can't find account with ID=" + accountId);
+
     }
 
 

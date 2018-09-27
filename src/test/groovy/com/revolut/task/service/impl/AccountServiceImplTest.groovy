@@ -89,12 +89,18 @@ class AccountServiceImplTest extends Specification {
     }
 
     def "delete nonexistent account"() {
-        expect:
-        !accService.removeAccount(1000)
+        when:
+        accService.removeAccount(1000L)
+        then:
+        IllegalArgumentException ex = thrown()
+        ex.message == "Can't find account with ID=1000"
     }
 
     def "lock nonexistent account"() {
-        expect:
-        !accService.lockAccount(1000)
+        when:
+        accService.lockAccount(1000L)
+        then:
+        IllegalArgumentException ex = thrown()
+        ex.message == "Can't find account with ID=1000"
     }
 }

@@ -7,6 +7,6 @@ public interface AccountService {
     Account createAccount(String currency);
     Account getAccount(Long id);
     boolean isLocked(Long id);
-    boolean removeAccount(long id);
-    boolean lockAccount(long id);
+    void removeAccount(Long id);
+    void lockAccount(Long id);
 }
