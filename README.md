@@ -3,7 +3,9 @@
 
 Simple standalone application with HTTP REST API for transferring money between account with embedded database
 ### 1. How to start? ###
-Run `com.revolut.task.AppStarter`. It will create H2 file database (`revolut_db.mv.db`) in the project directory and 
+Run `mvn clean install` to compile application and run tests
+ 
+Run `com.revolut.task.AppStarter` to launch application. It will create H2 file database (`revolut_db.mv.db`) in the project directory and 
 will start server on `8080` port.  
 ### 2. API ###
 All calls to API must be started with `http://localhost:8080/api`
@@ -24,14 +26,14 @@ All calls to API must be started with `http://localhost:8080/api`
 	<td>-</td>
 	<td>
       <pre>
-      {
-        "id": ACCOUNT_ID,
-        "locked": false,
-        "balance": {
-          "amount": 0,
-          "currency": "USD"
-        }
-      }
+{
+ "id": ACCOUNT_ID,
+ "locked": false,
+ "balance": {
+   "amount": 0,
+   "currency": "USD"
+ }
+}
 	  </pre>
     </td>
 </tr>
@@ -139,3 +141,13 @@ All calls to API must be started with `http://localhost:8080/api`
     </td>
 </tr>
 </tbody></table>
+
+### 3. 3rd-party components used ###
+* [Jetty](https://www.eclipse.org/jetty/) - embedded HTTP and Servlet server
+* [Jersey](https://jersey.github.io) - implementation of JAX-RS API to write RESTful Web Services
+* [H2 Database Engine](http://www.h2database.com/html/main.html) - Java SQL file and in-memory database
+* [jOOQ](https://www.jooq.org) -  fluent API for typesafe SQL query construction and execution
+* [Flyway](https://flywaydb.org) - database migration tool (used to create initial structure and fill with test data)
+* [Guice](https://github.com/google/guice) - lightweight dependency framework
+* [Lombok](https://projectlombok.org) - bytecode generation library to avoid of writing of the boilerplate code
+* [Spock](http://spockframework.org) - testing and specification framework for Java and Groovy applications
