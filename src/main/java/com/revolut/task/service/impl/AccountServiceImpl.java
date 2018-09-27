@@ -2,6 +2,7 @@ package com.revolut.task.service.impl;
 
 import com.revolut.task.model.Account;
 import com.revolut.task.model.Money;
+import com.revolut.task.model.exceptions.AccountNotFoundException;
 import com.revolut.task.model.sql.tables.records.AccountRecord;
 import com.revolut.task.service.api.AccountService;
 import com.revolut.task.service.api.DatabaseManager;
@@ -59,8 +60,7 @@ public class AccountServiceImpl implements AccountService {
         if (accountRecord != null) {
             return convertFrom(accountRecord);
         }
-        throwAccountNotFound(id);
-        return null; //unreached
+        throw new AccountNotFoundException(id);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
                 .where(ACCOUNT.ID.eq(id))
                 .fetchOne();
         if (locked == null) {
-            throwAccountNotFound(id);
+            throw new AccountNotFoundException(id);
         }
         return locked.get(ACCOUNT.LOCKED);
     }
@@ -82,7 +82,7 @@ public class AccountServiceImpl implements AccountService {
                 .where(ACCOUNT.ID.eq(id))
                 .execute() > 0;
         if (!accountExists) {
-            throwAccountNotFound(id);
+            throw new AccountNotFoundException(id);
         }
     }
 
@@ -96,7 +96,7 @@ public class AccountServiceImpl implements AccountService {
                         .where(ACCOUNT.ID.eq(id))
                         .execute() > 0);
         if (!accountExists) {
-            throwAccountNotFound(id);
+            throw new AccountNotFoundException(id);
         }
     }
 
@@ -109,11 +109,6 @@ public class AccountServiceImpl implements AccountService {
         balance.setCurrency(accountRecord.getMoneyCurrency());
         account.setBalance(balance);
         return account;
-    }
-
-    private void throwAccountNotFound(Long accountId) throws RuntimeException {
-        throw new IllegalArgumentException("Can't find account with ID=" + accountId);
-
     }
 
 

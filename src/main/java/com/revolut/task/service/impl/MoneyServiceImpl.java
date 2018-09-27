@@ -1,6 +1,10 @@
 package com.revolut.task.service.impl;
 
 import com.revolut.task.model.Money;
+import com.revolut.task.model.exceptions.AccountLockedException;
+import com.revolut.task.model.exceptions.AccountNotFoundException;
+import com.revolut.task.model.exceptions.MoneyNegativeAmountException;
+import com.revolut.task.model.exceptions.NotEnoughMoneyException;
 import com.revolut.task.model.sql.tables.Account;
 import com.revolut.task.service.api.*;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +18,6 @@ import java.util.Optional;
 import static com.revolut.task.model.sql.Tables.ACCOUNT;
 
 @Slf4j
-//TODO: check for account lock
 public class MoneyServiceImpl implements MoneyService {
     private DatabaseManager databaseManager;
     private AccountLockManager lockManager;
@@ -53,14 +56,14 @@ public class MoneyServiceImpl implements MoneyService {
             money.setCurrency((String) map.get().get(Account.ACCOUNT.MONEY_CURRENCY.getName()));
             return money;
         } else {
-            throw new IllegalArgumentException("Can't find account with ID=" + id);
+            throw new AccountNotFoundException(id);
         }
     }
 
     @Override
     public void transfer(Long fromId, Long toId, Money moneyToTransfer) {
         if (moneyToTransfer.getAmount().signum() == -1) {
-            throw new IllegalArgumentException("Can't transfer negative amount of money");
+            throw new MoneyNegativeAmountException("transfer");
         }
         lockManager.doInLock(fromId, toId, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
@@ -75,7 +78,7 @@ public class MoneyServiceImpl implements MoneyService {
     @Override
     public void withdraw(Long id, Money moneyToWithdraw) {
         if (moneyToWithdraw.getAmount().signum() == -1) {
-            throw new IllegalArgumentException("Can't withdraw negative amount of money");
+            throw new MoneyNegativeAmountException("withdraw");
         }
         lockManager.doInLock(id, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
@@ -87,8 +90,7 @@ public class MoneyServiceImpl implements MoneyService {
                     log.trace("withdraw: id={}, old={}, withdraw={}, withdrawInCurrency={}, new={}",
                             id, balance, moneyToWithdraw, withdrawInCurrency, newBalance);
                     if (newBalance.getAmount().signum() == -1) {
-                        throw new IllegalArgumentException(
-                                "Account ID=" + id + " doesn't have enough money to withdraw requested amount");
+                        throw new NotEnoughMoneyException(id, "withdraw");
                     }
                     DSL.using(configuration)
                             .update(ACCOUNT)
@@ -102,7 +104,7 @@ public class MoneyServiceImpl implements MoneyService {
     @Override
     public void deposit(Long id, Money moneyToDeposit) {
         if (moneyToDeposit.getAmount().signum() == -1) {
-            throw new IllegalArgumentException("Can't deposit negative amount of money");
+            throw new MoneyNegativeAmountException("deposit");
         }
         lockManager.doInLock(id, () ->
                 databaseManager.getSqlDSL().transaction(configuration -> {
@@ -123,7 +125,7 @@ public class MoneyServiceImpl implements MoneyService {
 
     private void checkForLock(Long accountId) {
         if (accountService.isLocked(accountId)) {
-            throw new IllegalArgumentException("Account with ID=" + accountId + " is locked");
+            throw new AccountLockedException(accountId);
         }
     }
 

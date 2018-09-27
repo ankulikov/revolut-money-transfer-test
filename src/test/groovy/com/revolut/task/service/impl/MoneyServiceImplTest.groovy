@@ -4,7 +4,10 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import com.revolut.task.di.AppInjectorModule
 import com.revolut.task.model.Money
-import com.revolut.task.service.api.AccountService
+import com.revolut.task.model.exceptions.AccountLockedException
+import com.revolut.task.model.exceptions.AccountNotFoundException
+import com.revolut.task.model.exceptions.MoneyNegativeAmountException
+import com.revolut.task.model.exceptions.NotEnoughMoneyException
 import com.revolut.task.service.api.MoneyService
 import com.revolut.task.util.DatabaseMigrator
 import spock.lang.Shared
@@ -32,82 +35,82 @@ class MoneyServiceImplTest extends Specification {
         when:
         moneyService.getBalance(ACC_ID)
         then:
-        def e = thrown(IllegalArgumentException.class)
+        AccountNotFoundException e = thrown()
         e.message == "Can't find account with ID=99999"
     }
 
     def "deposit and withdraw in the same currency"() {
         def ACC_ID = 1L //350 USD
         when:
-        moneyService.deposit(1,new Money(bigDec("100"),"USD"))
+        moneyService.deposit(1, new Money(bigDec("100"), "USD"))
         then:
-        moneyService.getBalance(ACC_ID) == new Money(bigDec("450.0000"),"USD")
+        moneyService.getBalance(ACC_ID) == new Money(bigDec("450.0000"), "USD")
         when:
-        moneyService.withdraw(1,new Money(bigDec("100"),"USD"))
+        moneyService.withdraw(1, new Money(bigDec("100"), "USD"))
         then:
-        moneyService.getBalance(ACC_ID) == new Money(bigDec("350.0000"),"USD")
+        moneyService.getBalance(ACC_ID) == new Money(bigDec("350.0000"), "USD")
     }
 
     def "deposit to non-existing account"() {
         def ACC_ID = 99998L
         when:
-        moneyService.deposit(ACC_ID, new Money(bigDec("100"),"RUB"))
+        moneyService.deposit(ACC_ID, new Money(bigDec("100"), "RUB"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        AccountNotFoundException e = thrown()
         e.message == "Can't find account with ID=99998"
     }
 
     def "deposit negative money"() {
         def ACC_ID = 1L
         when:
-        moneyService.deposit(ACC_ID, new Money(bigDec("-100"),"RUB"))
+        moneyService.deposit(ACC_ID, new Money(bigDec("-100"), "RUB"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        MoneyNegativeAmountException e = thrown()
         e.message == "Can't deposit negative amount of money"
     }
 
     def "deposit from locked account"() {
         def ACC_ID = 3L //1300 EUR, locked
         when:
-        moneyService.deposit(ACC_ID, new Money(bigDec("10"),"EUR"))
+        moneyService.deposit(ACC_ID, new Money(bigDec("10"), "EUR"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        AccountLockedException e = thrown()
         e.message == "Account with ID=3 is locked"
     }
 
     def "withdraw from non-existing account"() {
         def ACC_ID = 99998L
         when:
-        moneyService.withdraw(ACC_ID, new Money(bigDec("100"),"RUB"))
+        moneyService.withdraw(ACC_ID, new Money(bigDec("100"), "RUB"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        AccountNotFoundException e = thrown()
         e.message == "Can't find account with ID=99998"
     }
 
     def "withdraw negative amount"() {
         def ACC_ID = 1L
         when:
-        moneyService.withdraw(ACC_ID, new Money(bigDec("-100"),"RUB"))
+        moneyService.withdraw(ACC_ID, new Money(bigDec("-100"), "RUB"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        MoneyNegativeAmountException e = thrown()
         e.message == "Can't withdraw negative amount of money"
     }
 
     def "withdraw exceeding amount"() {
         def ACC_ID = 1L //350 USD
         when:
-        moneyService.withdraw(ACC_ID, new Money(bigDec("500"),"USD"))
+        moneyService.withdraw(ACC_ID, new Money(bigDec("500"), "USD"))
         then:
-        def e = thrown(IllegalArgumentException.class)
-        e.message == "Account ID=1 doesn't have enough money to withdraw requested amount"
+        NotEnoughMoneyException e = thrown()
+        e.message == "Account with ID=1 doesn't have enough money to complete withdraw"
     }
 
     def "withdraw from locked account"() {
         def ACC_ID = 3 //1300 EUR, locked
         when:
-        moneyService.withdraw(ACC_ID, new Money(bigDec("10"),"EUR"))
+        moneyService.withdraw(ACC_ID, new Money(bigDec("10"), "EUR"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        AccountLockedException e = thrown()
         e.message == "Account with ID=3 is locked"
     }
 
@@ -146,9 +149,9 @@ class MoneyServiceImplTest extends Specification {
         def ACC1 = 1
         def ACC2 = 2
         when:
-        moneyService.transfer(ACC1, ACC2, new Money(bigDec("-50"),"EUR"))
+        moneyService.transfer(ACC1, ACC2, new Money(bigDec("-50"), "EUR"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        MoneyNegativeAmountException e = thrown()
         e.message == "Can't transfer negative amount of money"
     }
 
@@ -156,19 +159,19 @@ class MoneyServiceImplTest extends Specification {
         def ACC1 = 1 //350 USD
         def ACC2 = 2 //120 RUB
         when:
-        moneyService.transfer(ACC1, ACC2, new Money(bigDec("30000"),"RUB"))
+        moneyService.transfer(ACC1, ACC2, new Money(bigDec("30000"), "RUB"))
         then:
-        def e = thrown(IllegalArgumentException.class)
-        e.message == "Account ID=1 doesn't have enough money to withdraw requested amount"
+        NotEnoughMoneyException e = thrown()
+        e.message == "Account with ID=1 doesn't have enough money to complete withdraw"
     }
 
     def "transfer to locked account"() {
         def ACC1 = 1L //350 USD
-        def ACC2= 3L //1300 EUR, locked
+        def ACC2 = 3L //1300 EUR, locked
         when:
-        moneyService.transfer(ACC1, ACC2, new Money(bigDec("20"),"RUB"))
+        moneyService.transfer(ACC1, ACC2, new Money(bigDec("20"), "RUB"))
         then:
-        def e = thrown(IllegalArgumentException.class)
+        AccountLockedException e = thrown()
         e.message == "Account with ID=3 is locked"
     }
 }

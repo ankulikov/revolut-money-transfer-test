@@ -2,6 +2,7 @@ package com.revolut.task.service.impl
 
 import com.revolut.task.model.Account
 import com.revolut.task.model.Money
+import com.revolut.task.model.exceptions.AccountNotFoundException
 import com.revolut.task.util.DatabaseMigrator
 import spock.lang.Shared
 import spock.lang.Specification
@@ -70,7 +71,7 @@ class AccountServiceImplTest extends Specification {
         when:
         accService.getAccount(id)
         then:
-        IllegalArgumentException ex = thrown()
+        AccountNotFoundException ex = thrown()
         ex.message == "Can't find account with ID="+id
 
     }
@@ -92,7 +93,7 @@ class AccountServiceImplTest extends Specification {
         when:
         accService.removeAccount(1000L)
         then:
-        IllegalArgumentException ex = thrown()
+        AccountNotFoundException ex = thrown()
         ex.message == "Can't find account with ID=1000"
     }
 
@@ -100,7 +101,7 @@ class AccountServiceImplTest extends Specification {
         when:
         accService.lockAccount(1000L)
         then:
-        IllegalArgumentException ex = thrown()
+        AccountNotFoundException ex = thrown()
         ex.message == "Can't find account with ID=1000"
     }
 }
