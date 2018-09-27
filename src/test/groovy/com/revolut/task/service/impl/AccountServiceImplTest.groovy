@@ -76,7 +76,7 @@ class AccountServiceImplTest extends Specification {
 
     }
 
-    def "create, lock and get account"() {
+    def "create, lock, unlock and get account"() {
         when:
         def account = accService.createAccount()
         def id = account.id
@@ -87,6 +87,11 @@ class AccountServiceImplTest extends Specification {
         account = accService.getAccount(id)
         then:
         account.locked
+        when:
+        accService.unlockAccount(id)
+        account = accService.getAccount(id)
+        then:
+        !account.locked
     }
 
     def "delete nonexistent account"() {

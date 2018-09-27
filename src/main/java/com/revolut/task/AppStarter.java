@@ -10,7 +10,12 @@ import org.glassfish.jersey.servlet.ServletContainer;
 public class AppStarter {
     public static void main(String[] args) {
         DatabaseMigrator.run();
-        Server server = new Server(8080);
+        startServer(8080, true);
+    }
+
+
+    public static Server startServer(int port, boolean joinThread) {
+        Server server = new Server(port);
         ServletContextHandler ctx =
                 new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
 
@@ -23,14 +28,18 @@ public class AppStarter {
                 "com.revolut.task.http");
 
         server.setErrorHandler(new ErrorHandler());
-
         try {
             server.start();
-            server.join();
+            if (joinThread) {
+                server.join();
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            server.destroy();
+            if (joinThread) {
+                server.destroy();
+            }
         }
+        return server;
     }
 }

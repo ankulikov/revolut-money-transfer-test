@@ -100,6 +100,20 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
+    @Override
+    public void unlockAccount(Long id) {
+        DSLContext sql = databaseManager.getSqlDSL();
+        boolean accountExists = sql.transactionResult(configuration ->
+                DSL.using(configuration)
+                        .update(ACCOUNT)
+                        .set(ACCOUNT.LOCKED, false)
+                        .where(ACCOUNT.ID.eq(id))
+                        .execute() > 0);
+        if (!accountExists) {
+            throw new AccountNotFoundException(id);
+        }
+    }
+
     private Account convertFrom(AccountRecord accountRecord) {
         Account account = new Account();
         account.setId(accountRecord.getId());

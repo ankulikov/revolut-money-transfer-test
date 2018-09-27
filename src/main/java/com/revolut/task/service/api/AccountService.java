@@ -9,4 +9,5 @@ public interface AccountService {
     boolean isLocked(Long id);
     void removeAccount(Long id);
     void lockAccount(Long id);
+    void unlockAccount(Long id);
 }
