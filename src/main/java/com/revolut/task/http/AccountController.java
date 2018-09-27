@@ -36,10 +36,16 @@ public class AccountController {
 
     @POST
     @Path("{id}/lock")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String lockAccount(@PathParam("id") String accountId) {
+    public Response lockAccount(@PathParam("id") String accountId) {
         accountService.lockAccount(Long.valueOf(accountId));
-        return "{\"locked\": true}";
+        return Response.noContent().build();
+    }
+
+    @POST
+    @Path("{id}/unlock")
+    public Response unlockAccount(@PathParam("id") String accountId) {
+        accountService.unlockAccount(Long.valueOf(accountId));
+        return Response.noContent().build();
     }
 
     @DELETE
