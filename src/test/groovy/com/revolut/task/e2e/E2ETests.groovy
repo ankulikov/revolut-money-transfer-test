@@ -5,6 +5,7 @@ import com.revolut.task.model.Account
 import com.revolut.task.model.Error
 import com.revolut.task.model.Money
 import com.revolut.task.util.DatabaseMigrator
+import org.apache.log4j.Level
 import org.eclipse.jetty.server.Server
 import spock.lang.Shared
 import spock.lang.Specification
@@ -13,8 +14,12 @@ import javax.ws.rs.NotFoundException
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.core.MediaType
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.logging.LogManager
 
 import static com.revolut.task.TestUtils.bigDec
+import static org.apache.log4j.LogManager.*
 
 class E2ETests extends Specification {
     static final int PORT = 32758
@@ -23,6 +28,8 @@ class E2ETests extends Specification {
     Server server = null
     @Shared
     private def client = ClientBuilder.newClient()
+    @Shared
+    def taskExecutor = Executors.newFixedThreadPool(10)
 
     def "create, get, lock, unlock, delete account"() {
         when:
@@ -66,6 +73,30 @@ class E2ETests extends Specification {
         then:
         getAccount(acc1.id).balance == new Money(bigDec("367.0000"), "RUB")
         getAccount(acc2.id).balance == new Money(bigDec("67.3000"), "EUR")
+    }
+
+    def "load testing"() {
+        def acc1 = createAccount("RUB")
+        def acc2 = createAccount("RUB")
+        deposit(acc1.id, new Money(bigDec("200000.0000"), "RUB"))
+        deposit(acc2.id, new Money(bigDec("300000.0000"), "RUB"))
+        def tasks = []
+        def oldRootLevel = rootLogger.getLevel()
+        rootLogger.setLevel(Level.OFF) //to disable console output
+        when:
+        1000.times {
+            def iter = it
+            tasks << { withdraw(acc1.id, new Money(bigDec("5"), "RUB")); println "withdraw-${iter}" }
+            tasks << { transfer(acc2.id, acc1.id, new Money(bigDec("5"), "RUB")); println "transfer-${iter}" }
+            tasks << { deposit(acc2.id, new Money(bigDec("5"), "RUB")); println "deposit-${iter}" }
+        }
+        println "tasks were created"
+        taskExecutor.invokeAll(tasks).forEach({ it.get() })
+        then:
+        getAccount(acc1.id).balance == new Money(bigDec("200000.0000"), "RUB")
+        getAccount(acc2.id).balance == new Money(bigDec("300000.0000"), "RUB")
+        cleanup:
+        rootLogger.setLevel(oldRootLevel)
     }
 
 
