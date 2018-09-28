@@ -15,13 +15,11 @@ import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
 import javax.ws.rs.core.MediaType
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.logging.LogManager
 
 import static com.revolut.task.TestUtils.bigDec
-import static org.apache.log4j.LogManager.*
+import static org.apache.log4j.LogManager.getRootLogger
 
-class E2ETests extends Specification {
+class E2ETest extends Specification {
     static final int PORT = 32758
     private static final String REST_URI = "http://localhost:${PORT}/api"
     @Shared
