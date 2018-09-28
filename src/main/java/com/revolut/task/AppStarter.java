@@ -1,5 +1,7 @@
 package com.revolut.task;
 
+import com.revolut.task.di.InjectorProvider;
+import com.revolut.task.service.api.DatabaseManager;
 import com.revolut.task.util.DatabaseMigrator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
@@ -10,6 +12,9 @@ import org.glassfish.jersey.servlet.ServletContainer;
 public class AppStarter {
     public static void main(String[] args) {
         DatabaseMigrator.run();
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(() -> InjectorProvider.provide().getInstance(DatabaseManager.class).close())
+        );
         startServer(8080, true);
     }
 
