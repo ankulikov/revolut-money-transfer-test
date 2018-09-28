@@ -203,6 +203,7 @@ All calls to API must be started with `http://localhost:8080/api`
 * [Jetty](https://www.eclipse.org/jetty/) - embedded HTTP and Servlet server
 * [Jersey](https://jersey.github.io) - implementation of JAX-RS API to write RESTful Web Services
 * [H2 Database Engine](http://www.h2database.com/html/main.html) - Java SQL file and in-memory database
+* [c3p0](https://www.mchange.com/projects/c3p0/) - JDBC Connection and Statement Pooling
 * [jOOQ](https://www.jooq.org) -  fluent API for typesafe SQL query construction and execution
 * [Flyway](https://flywaydb.org) - database migration tool (used to create initial structure and fill with test data)
 * [Guice](https://github.com/google/guice) - lightweight dependency framework
