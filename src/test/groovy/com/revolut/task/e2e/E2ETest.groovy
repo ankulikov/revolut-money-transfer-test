@@ -10,6 +10,8 @@ import org.eclipse.jetty.server.Server
 import spock.lang.Shared
 import spock.lang.Specification
 
+import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotAllowedException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.Entity
@@ -71,6 +73,39 @@ class E2ETest extends Specification {
         then:
         getAccount(acc1.id).balance == new Money(bigDec("367.0000"), "RUB")
         getAccount(acc2.id).balance == new Money(bigDec("67.3000"), "EUR")
+    }
+
+    def "non-existed URI"() {
+        NotFoundException ex
+        when:
+        client.target(REST_URI).path("some_path").request().get(Error.class)
+        then:
+        ex = thrown()
+        ex.getResponse().readEntity(Error.class).error == "Can't find requested resource"
+        when:
+        client.target(REST_URI).path("account/NOT_A_NUMBER").request().get(Account.class)
+        then:
+        ex = thrown()
+        ex.getResponse().readEntity(Error.class).error == "Can't find requested resource"
+    }
+
+    def "incorrect http method"() {
+        NotAllowedException ex
+        when:
+        client.target(REST_URI).path("account/1").request().method("POST", Error.class)
+        then:
+        ex = thrown()
+        ex.getResponse().readEntity(Error.class).error == "Requested resource is not allowed by specified method"
+    }
+
+    def "invalid json request"() {
+        BadRequestException ex
+        def acc = createAccount(null)
+        when:
+        client.target(REST_URI).path("account/${acc.id}/deposit").request().post(Entity.json("{\"some field\": true}"), Error.class)
+        then:
+        ex = thrown()
+        ex.getResponse().readEntity(Error.class).error == "Invalid JSON request"
     }
 
     def "load testing"() {

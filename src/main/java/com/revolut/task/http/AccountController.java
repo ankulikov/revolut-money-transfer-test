@@ -18,7 +18,7 @@ public class AccountController {
     }
 
     @GET
-    @Path("{id}")
+    @Path("{id: [0-9]+}")
     @Produces(MediaType.APPLICATION_JSON)
     public Account getAccount(@PathParam("id") String accountId) {
         return accountService.getAccount(Long.valueOf(accountId));
@@ -34,21 +34,21 @@ public class AccountController {
     }
 
     @POST
-    @Path("{id}/lock")
+    @Path("{id: [0-9]+}/lock")
     public Response lockAccount(@PathParam("id") String accountId) {
         accountService.lockAccount(Long.valueOf(accountId));
         return Response.noContent().build();
     }
 
     @POST
-    @Path("{id}/unlock")
+    @Path("{id: [0-9]+}/unlock")
     public Response unlockAccount(@PathParam("id") String accountId) {
         accountService.unlockAccount(Long.valueOf(accountId));
         return Response.noContent().build();
     }
 
     @DELETE
-    @Path("{id}")
+    @Path("{id: [0-9]+}")
     public Response removeAccount(@PathParam("id") String accountId) {
         accountService.removeAccount(Long.valueOf(accountId));
         return Response.noContent().build();

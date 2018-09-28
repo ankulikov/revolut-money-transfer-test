@@ -181,7 +181,19 @@ All calls to API must be started with `http://localhost:8080/api`
   <td><code>{"error":"Account with ID=123 doesn't have enough money to complete withdraw operation"}</td>
 </tr>
 <tr>
-  <td>500</td>
+  <td>400</td>
+  <td><code>{"error":"Invalid JSON request"}</td>
+</tr>
+<tr>
+  <td>404</td>
+  <td><code>{"error":"Can't find requested resource"}</td>
+</tr>
+<tr>
+  <td>405</td>
+  <td><code>{"error":"Requested resource is not allowed by specified method"}</td>
+</tr>
+<tr>
+  <td>4**, 5**</td>
   <td><code>{"error":"ANY OTHER ERROR MESSAGE"}</td>
 </tr>
 </tbody>

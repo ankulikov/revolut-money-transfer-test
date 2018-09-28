@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 public class AppStarter {
@@ -31,6 +32,7 @@ public class AppStarter {
         serHol.setInitOrder(1);
         serHol.setInitParameter("jersey.config.server.provider.packages",
                 "com.revolut.task.http");
+//        serHol.setInitParameter("jersey.config.server.disableAutoDiscovery","true");
 
         server.setErrorHandler(new ErrorHandler());
         try {
