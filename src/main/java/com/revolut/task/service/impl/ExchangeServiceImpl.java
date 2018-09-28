@@ -1,5 +1,6 @@
 package com.revolut.task.service.impl;
 
+import com.google.inject.Singleton;
 import com.revolut.task.model.Money;
 import com.revolut.task.service.api.ExchangeService;
 
@@ -7,6 +8,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
 
+@Singleton
 public class ExchangeServiceImpl implements ExchangeService {
     private Map<String, BigDecimal> rates = new HashMap<>();
 

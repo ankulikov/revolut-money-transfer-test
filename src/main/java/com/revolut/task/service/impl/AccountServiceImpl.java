@@ -1,5 +1,6 @@
 package com.revolut.task.service.impl;
 
+import com.google.inject.Singleton;
 import com.revolut.task.model.Account;
 import com.revolut.task.model.Money;
 import com.revolut.task.model.exceptions.AccountNotFoundException;
@@ -15,6 +16,7 @@ import javax.inject.Inject;
 
 import static com.revolut.task.model.sql.Tables.ACCOUNT;
 
+@Singleton
 public class AccountServiceImpl implements AccountService {
     private DatabaseManager databaseManager;
     private ExchangeService exchangeService;

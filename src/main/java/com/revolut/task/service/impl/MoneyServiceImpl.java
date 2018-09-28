@@ -1,5 +1,6 @@
 package com.revolut.task.service.impl;
 
+import com.google.inject.Singleton;
 import com.revolut.task.model.Money;
 import com.revolut.task.model.exceptions.AccountLockedException;
 import com.revolut.task.model.exceptions.AccountNotFoundException;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import static com.revolut.task.model.sql.Tables.ACCOUNT;
 
 @Slf4j
+@Singleton
 public class MoneyServiceImpl implements MoneyService {
     private DatabaseManager databaseManager;
     private AccountLockManager lockManager;

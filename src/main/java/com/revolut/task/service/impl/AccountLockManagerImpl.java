@@ -1,11 +1,13 @@
 package com.revolut.task.service.impl;
 
+import com.google.inject.Singleton;
 import com.revolut.task.service.api.AccountLockManager;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+@Singleton
 public class AccountLockManagerImpl implements AccountLockManager {
     Map<Long, ReentrantLock> locks = new ConcurrentHashMap<>();
 

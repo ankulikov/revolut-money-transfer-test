@@ -15,6 +15,7 @@
         <flyway.version>5.1.4</flyway.version>
         <guice.version>4.2.0</guice.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <c3p0.vesion>0.9.5.2</c3p0.vesion>
     </properties>
 
     <groupId>com.revolut.task</groupId>
@@ -102,7 +103,11 @@
             <artifactId>flyway-core</artifactId>
             <version>${flyway.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.google.inject/guice -->
+        <dependency>
+            <groupId>com.mchange</groupId>
+            <artifactId>c3p0</artifactId>
+            <version>${c3p0.vesion}</version>
+        </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
